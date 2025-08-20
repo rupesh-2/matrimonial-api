@@ -62,7 +62,7 @@ graph TB
         end
 
         subgraph "File Storage"
-            S3[Amazon S3 / File Storage]
+            Firebase[Firebase Storage]
         end
     end
 
@@ -116,7 +116,7 @@ graph TB
     MatchmakingService --> Redis
     NotificationService --> Redis
 
-    UserController --> S3
+    UserController --> Firebase
     NotificationService --> EmailService
     NotificationService --> PushNotification
     Analytics --> MySQL
@@ -319,7 +319,7 @@ graph LR
     subgraph "Data Storage"
         DS1[(MySQL)]
         DS2[(Redis)]
-        DS3[(File Storage)]
+        Firebase[(Firebase Storage)]
     end
 
     %% External Services
@@ -344,7 +344,7 @@ graph LR
     BS1 --> DM4
     BS2 --> DM5
     BS3 --> DM1
-    BS4 --> DS3
+            BS4 --> Firebase
 
     DM1 --> DS1
     DM2 --> DS1
