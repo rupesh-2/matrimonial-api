@@ -23,9 +23,11 @@ A comprehensive Laravel REST API for a matrimonial application with advanced mat
 -   Chat history and conversation management
 -   Unread message tracking
 
-❤️ **Like System**
+❤️ **Discover & Like System**
 
--   User likes and mutual matching
+-   Discover section with profile recommendations
+-   Like profiles to express interest
+-   Mutual likes create matches automatically
 -   Like-based collaborative filtering
 -   User behavior analysis
 
@@ -177,9 +179,99 @@ Content-Type: application/json
 }
 ```
 
+### Discover Section
+
+#### Get Discover Profiles
+
+```http
+GET /api/discover?limit=10&page=1
+Authorization: Bearer {token}
+```
+
+Response:
+
+```json
+{
+    "discover_profiles": [
+        {
+            "user": {
+                "id": 2,
+                "name": "Jane Doe",
+                "age": 26,
+                "gender": "female",
+                "religion": "Hindu",
+                "caste": "Brahmin",
+                "income": 600000,
+                "education": "Masters",
+                "location": "Mumbai",
+                "occupation": "Data Scientist",
+                "bio": "Looking for a caring partner"
+            },
+            "score": 0.85,
+            "compatibility_percentage": 85
+        }
+    ],
+    "total": 1,
+    "current_page": 1,
+    "per_page": 10,
+    "has_more": false
+}
+```
+
+#### Like a Profile
+
+```http
+POST /api/discover/like/{user_id}
+Authorization: Bearer {token}
+```
+
+Response (if not a match):
+
+```json
+{
+    "message": "Profile liked successfully",
+    "is_match": false,
+    "liked_user": {
+        "id": 2,
+        "name": "Jane Doe",
+        "age": 26,
+        "gender": "female"
+    }
+}
+```
+
+Response (if it's a match):
+
+```json
+{
+    "message": "It's a match! 🎉",
+    "is_match": true,
+    "matched_user": {
+        "id": 2,
+        "name": "Jane Doe",
+        "age": 26,
+        "gender": "female"
+    }
+}
+```
+
+#### Unlike a Profile
+
+```http
+DELETE /api/discover/unlike/{user_id}
+Authorization: Bearer {token}
+```
+
+#### Get Profiles That Liked You
+
+```http
+GET /api/discover/liked-by?limit=10&page=1
+Authorization: Bearer {token}
+```
+
 ### Matchmaking
 
-#### Get Recommendations
+#### Get Recommendations (Legacy)
 
 ```http
 GET /api/recommendations?limit=10
@@ -213,20 +305,39 @@ Response:
 }
 ```
 
-### Matches
-
-#### Create Match
-
-```http
-POST /api/matches/{user_id}
-Authorization: Bearer {token}
-```
+### Matches (Mutual Likes)
 
 #### Get Matches
 
 ```http
-GET /api/matches
+GET /api/matches?limit=10&page=1
 Authorization: Bearer {token}
+```
+
+Response:
+
+```json
+{
+    "matches": [
+        {
+            "id": 2,
+            "name": "Jane Doe",
+            "age": 26,
+            "gender": "female",
+            "religion": "Hindu",
+            "caste": "Brahmin",
+            "income": 600000,
+            "education": "Masters",
+            "location": "Mumbai",
+            "occupation": "Data Scientist",
+            "bio": "Looking for a caring partner"
+        }
+    ],
+    "total": 1,
+    "current_page": 1,
+    "per_page": 10,
+    "has_more": false
+}
 ```
 
 #### Remove Match
@@ -236,7 +347,7 @@ DELETE /api/matches/{user_id}
 Authorization: Bearer {token}
 ```
 
-### Likes
+### Likes (Legacy - Deprecated)
 
 #### Like User
 
@@ -428,14 +539,28 @@ curl -X GET http://localhost:8000/api/recommendations \
   -H "Authorization: Bearer {your_token}"
 ```
 
-### 3. Like a User
+### 3. Get Discover Profiles
 
 ```bash
-curl -X POST http://localhost:8000/api/likes/2 \
+curl -X GET http://localhost:8000/api/discover \
   -H "Authorization: Bearer {your_token}"
 ```
 
-### 4. Send Message
+### 4. Like a Profile from Discover
+
+```bash
+curl -X POST http://localhost:8000/api/discover/like/2 \
+  -H "Authorization: Bearer {your_token}"
+```
+
+### 5. Get Matches (Mutual Likes)
+
+```bash
+curl -X GET http://localhost:8000/api/matches \
+  -H "Authorization: Bearer {your_token}"
+```
+
+### 6. Send Message
 
 ```bash
 curl -X POST http://localhost:8000/api/messages/send \

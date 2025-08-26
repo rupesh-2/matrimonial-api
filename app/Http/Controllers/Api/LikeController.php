@@ -9,50 +9,23 @@ use Illuminate\Http\Request;
 class LikeController extends Controller
 {
     /**
-     * Like a user
+     * Like a user (legacy method - use discover/like instead)
      */
     public function like(Request $request, User $user)
     {
-        $currentUser = $request->user();
-
-        // Check if already liked
-        if ($currentUser->hasLiked($user)) {
-            return response()->json([
-                'message' => 'Already liked this user',
-            ], 400);
-        }
-
-        // Create like
-        $currentUser->likes()->attach($user->id);
-
-        // Check if it's a mutual like (match)
-        $isMatch = $user->hasLiked($currentUser);
-        
-        if ($isMatch) {
-            // Create mutual match
-            $currentUser->matches()->attach($user->id);
-        }
-
         return response()->json([
-            'message' => 'User liked successfully',
-            'is_match' => $isMatch,
-            'liked_user' => $user,
-        ], 201);
+            'message' => 'This endpoint is deprecated. Please use /api/discover/like/{user_id} instead.',
+        ], 410);
     }
 
     /**
-     * Unlike a user
+     * Unlike a user (legacy method - use discover/unlike instead)
      */
     public function unlike(Request $request, User $user)
     {
-        $currentUser = $request->user();
-
-        // Remove like
-        $currentUser->likes()->detach($user->id);
-
         return response()->json([
-            'message' => 'User unliked successfully',
-        ]);
+            'message' => 'This endpoint is deprecated. Please use /api/discover/unlike/{user_id} instead.',
+        ], 410);
     }
 
     /**

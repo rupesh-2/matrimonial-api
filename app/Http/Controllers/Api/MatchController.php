@@ -32,20 +32,37 @@ class MatchController extends Controller
     }
 
     /**
-     * Get all matches for the authenticated user
+     * Get all mutual matches for the authenticated user
      */
     public function getMatches(Request $request)
     {
+        $request->validate([
+            'limit' => 'sometimes|integer|min:1|max:50',
+            'page' => 'sometimes|integer|min:1',
+        ]);
+
+        $limit = $request->get('limit', 10);
+        $page = $request->get('page', 1);
         $user = $request->user();
         
-        $matches = $user->matches()->with('preferences')->get();
-        $matchedBy = $user->matchedBy()->with('preferences')->get();
+        // Get mutual matches (users who liked each other)
+        // Get users that the current user has liked AND who have liked the current user back
+        $likedUserIds = $user->likes()->pluck('liked_user_id');
+        $likedByUserIds = $user->likedBy()->pluck('user_id');
         
-        $allMatches = $matches->merge($matchedBy)->unique('id')->values();
+        // Find intersection (mutual likes)
+        $mutualUserIds = $likedUserIds->intersect($likedByUserIds);
+        
+        $mutualMatches = User::whereIn('id', $mutualUserIds)
+                             ->with('preferences')
+                             ->paginate($limit, ['*'], 'page', $page);
 
         return response()->json([
-            'matches' => $allMatches,
-            'total' => $allMatches->count(),
+            'matches' => $mutualMatches->items(),
+            'total' => $mutualMatches->total(),
+            'current_page' => $mutualMatches->currentPage(),
+            'per_page' => $mutualMatches->perPage(),
+            'has_more' => $mutualMatches->hasMorePages(),
         ]);
     }
 

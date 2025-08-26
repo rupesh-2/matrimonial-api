@@ -189,4 +189,66 @@ class MatchmakingService
         
         return $matches->merge($matchedBy)->unique('id')->values()->toArray();
     }
+
+    /**
+     * Get discover recommendations for a user (profiles to like)
+     */
+    public function getDiscoverRecommendations(User $user, int $limit = 10, int $page = 1): array
+    {
+        // Get user preferences
+        $preferences = $user->preferences;
+        
+        // Build query for potential discover profiles
+        $query = User::where('id', '!=', $user->id)
+                    ->where('gender', '!=', $user->gender)
+                    ->whereNotIn('id', $user->likes()->pluck('liked_user_id')) // Exclude already liked
+                    ->whereNotIn('id', $user->likedBy()->pluck('user_id')) // Exclude those who liked current user
+                    ->whereNotIn('id', $user->matches()->pluck('matched_user_id')) // Exclude existing matches
+                    ->whereNotIn('id', $user->matchedBy()->pluck('user_id')); // Exclude existing matches
+
+        if (!$preferences) {
+            // If no preferences, return random users
+            $profiles = $query->inRandomOrder()
+                             ->paginate($limit, ['*'], 'page', $page);
+        } else {
+            // Get all potential matches with scores
+            $potentialMatches = $query->get();
+            $recommendations = [];
+
+            foreach ($potentialMatches as $match) {
+                $score = $this->calculateMatchScore($user, $match, $preferences);
+                
+                if ($score > 0) {
+                    $recommendations[] = [
+                        'user' => $match,
+                        'score' => $score,
+                        'compatibility_percentage' => min(100, $score * 100)
+                    ];
+                }
+            }
+
+            // Sort by score (highest first)
+            usort($recommendations, function ($a, $b) {
+                return $b['score'] <=> $a['score'];
+            });
+
+            // Manual pagination
+            $offset = ($page - 1) * $limit;
+            $profiles = array_slice($recommendations, $offset, $limit);
+            $total = count($recommendations);
+            $hasMore = ($offset + $limit) < $total;
+
+            return [
+                'profiles' => $profiles,
+                'total' => $total,
+                'has_more' => $hasMore
+            ];
+        }
+
+        return [
+            'profiles' => $profiles->items(),
+            'total' => $profiles->total(),
+            'has_more' => $profiles->hasMorePages()
+        ];
+    }
 } 

@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\MatchController;
 use App\Http\Controllers\Api\MessageController;
 use App\Http\Controllers\Api\RecommendationController;
 use App\Http\Controllers\Api\LikeController;
+use App\Http\Controllers\Api\DiscoverController;
 
 /*
 |--------------------------------------------------------------------------
@@ -41,7 +42,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/matches', [MatchController::class, 'getMatches']);
     Route::delete('/matches/{user}', [MatchController::class, 'unmatch']);
     
-    // Likes
+    // Discover Section (New Like System)
+    Route::get('/discover', [DiscoverController::class, 'getDiscoverProfiles']);
+    Route::post('/discover/like/{user}', [DiscoverController::class, 'likeProfile']);
+    Route::delete('/discover/unlike/{user}', [DiscoverController::class, 'unlikeProfile']);
+    Route::get('/discover/liked-by', [DiscoverController::class, 'getLikedByProfiles']);
+    
+    // Likes (Legacy - Deprecated)
     Route::post('/likes/{user}', [LikeController::class, 'like']);
     Route::delete('/likes/{user}', [LikeController::class, 'unlike']);
     Route::get('/likes', [LikeController::class, 'getLikes']);
