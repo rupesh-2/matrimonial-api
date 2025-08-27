@@ -107,6 +107,27 @@ class User extends Authenticatable
     }
 
     /**
+     * Get all matches with pagination (both directions)
+     */
+    public function getAllMatchesPaginated($limit = 10, $page = 1)
+    {
+        $matches = $this->matches()->with('preferences');
+        $matchedBy = $this->matchedBy()->with('preferences');
+        
+        // Combine both queries
+        $allMatches = $matches->union($matchedBy);
+        
+        // Since union doesn't support pagination directly, we'll use a different approach
+        $matchIds = $this->matches()->pluck('users.id');
+        $matchedByIds = $this->matchedBy()->pluck('users.id');
+        $allMatchIds = $matchIds->merge($matchedByIds)->unique();
+        
+        return User::whereIn('id', $allMatchIds)
+                  ->with('preferences')
+                  ->paginate($limit, ['*'], 'page', $page);
+    }
+
+    /**
      * Get the user's likes
      */
     public function likes()

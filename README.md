@@ -506,6 +506,24 @@ Run the test suite:
 php artisan test
 ```
 
+### Test Users
+
+For testing the discover and like system, use the test users provided in [TEST_USERS_GUIDE.md](TEST_USERS_GUIDE.md):
+
+**Primary Test Users (Already Matched):**
+
+-   **John Doe:** `john@test.com` / `password123`
+-   **Priya Sharma:** `priya@test.com` / `password123`
+
+**Discover Test Users:**
+
+-   **Alice Johnson:** `alice@test.com` / `password123`
+-   **Rahul Patel:** `rahul@test.com` / `password123`
+-   **Neha Gupta:** `neha@test.com` / `password123`
+-   **Amit Singh:** `amit@test.com` / `password123`
+
+See [TEST_USERS_GUIDE.md](TEST_USERS_GUIDE.md) for complete testing scenarios and API examples.
+
 ## Sample API Usage
 
 ### 1. Register and Login

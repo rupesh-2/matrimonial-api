@@ -76,8 +76,9 @@ class DiscoverController extends Controller
         $isMatch = $targetUser->hasLiked($currentUser);
         
         if ($isMatch) {
-            // Create mutual match
+            // Create mutual match in both directions
             $currentUser->matches()->attach($targetUser->id);
+            $targetUser->matches()->attach($currentUser->id);
             
             return response()->json([
                 'message' => 'It\'s a match! 🎉',

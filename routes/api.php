@@ -40,6 +40,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/recommendations', [RecommendationController::class, 'getRecommendations']);
     Route::post('/matches/{user}', [MatchController::class, 'createMatch']);
     Route::get('/matches', [MatchController::class, 'getMatches']);
+    Route::get('/matches/stats', [MatchController::class, 'getMatchStats']);
+    Route::get('/matches/{user}', [MatchController::class, 'getMatch']);
     Route::delete('/matches/{user}', [MatchController::class, 'unmatch']);
     
     // Discover Section (New Like System)
