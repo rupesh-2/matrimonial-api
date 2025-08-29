@@ -21,3 +21,30 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+
+# Firebase and sensitive credentials
+/storage/firebase-credentials.json
+/storage/app/firebase/
+/storage/app/private/
+*.json
+!composer.json
+!package.json
+!phpunit.xml
+!vite.config.js
+
+# Service account files
+*-service-account.json
+firebase-*.json
+google-*.json
+
+# Private keys and certificates
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+
+# Environment and config files
+.env.*
+config/firebase.php
+config/services.php
