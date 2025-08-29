@@ -8,12 +8,10 @@ This class diagram shows the complete object-oriented structure of the Matrimoni
 
 ```mermaid
 classDiagram
-    %% Core Models
     class User {
         +id: bigint
         +name: string
         +email: string
-        +email_verified_at: timestamp
         +password: string
         +gender: enum
         +date_of_birth: date
@@ -24,7 +22,6 @@ classDiagram
         +fcm_token: string
         +notification_enabled: boolean
         +is_active: boolean
-        +last_login_at: timestamp
         +created_at: timestamp
         +updated_at: timestamp
         +preferences()
@@ -36,10 +33,6 @@ classDiagram
         +receivedMessages()
         +notifications()
         +tokens()
-        +canReceiveNotifications()
-        +updateFcmToken()
-        +enableNotifications()
-        +disableNotifications()
     }
 
     class Preference {
@@ -135,7 +128,6 @@ classDiagram
         +tokenable()
     }
 
-    %% Controllers
     class AuthController {
         +register()
         +login()
@@ -192,7 +184,6 @@ classDiagram
         +getCompatibilityScore()
     }
 
-    %% Services
     class MatchmakingService {
         +getRecommendations()
         +calculateCompatibilityScore()
@@ -226,7 +217,6 @@ classDiagram
         -createNotificationRecord()
     }
 
-    %% Relationships
     User ||--|| Preference
     User ||--o{ Like
     User ||--o{ Match
@@ -237,7 +227,6 @@ classDiagram
     Like ||--o{ Match
     Message ||--o{ Notification
 
-    %% Controller Dependencies
     AuthController --> User
     UserController --> User
     UserController --> Preference
@@ -251,7 +240,6 @@ classDiagram
     NotificationController --> FCMService
     RecommendationController --> MatchmakingService
 
-    %% Service Dependencies
     DiscoverController --> MatchmakingService
     DiscoverController --> NotificationService
     MessageController --> NotificationService
