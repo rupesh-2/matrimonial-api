@@ -8,11 +8,13 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Http\Request;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, HasApiTokens;
+    use HasFactory, Notifiable, HasApiTokens, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -33,6 +35,12 @@ class User extends Authenticatable
         'occupation',
         'bio',
         'profile_picture',
+        'remember_login',
+        'last_login_at',
+        'last_login_ip',
+        'last_login_user_agent',
+        'status',
+        'deletion_reason',
     ];
 
     /**
@@ -57,6 +65,9 @@ class User extends Authenticatable
             'password' => 'hashed',
             'age' => 'integer',
             'income' => 'integer',
+            'remember_login' => 'boolean',
+            'last_login_at' => 'datetime',
+            'deleted_at' => 'datetime',
         ];
     }
 
@@ -176,5 +187,134 @@ class User extends Authenticatable
     public function hasLiked(User $user): bool
     {
         return $this->likes()->where('liked_user_id', $user->id)->exists();
+    }
+
+    /**
+     * Get users blocked by this user
+     */
+    public function blockedUsers()
+    {
+        return $this->belongsToMany(User::class, 'user_blocks', 'blocker_id', 'blocked_user_id')
+                    ->withPivot('reason', 'blocked_at')
+                    ->withTimestamps();
+    }
+
+    /**
+     * Get users who blocked this user
+     */
+    public function blockedByUsers()
+    {
+        return $this->belongsToMany(User::class, 'user_blocks', 'blocked_user_id', 'blocker_id')
+                    ->withPivot('reason', 'blocked_at')
+                    ->withTimestamps();
+    }
+
+    /**
+     * Check if user is blocked by another user
+     */
+    public function isBlockedBy(User $user): bool
+    {
+        return UserBlock::isBlocked($user->id, $this->id);
+    }
+
+    /**
+     * Check if user has blocked another user
+     */
+    public function hasBlocked(User $user): bool
+    {
+        return UserBlock::isBlocked($this->id, $user->id);
+    }
+
+    /**
+     * Block a user
+     */
+    public function blockUser(User $user, string $reason = null): bool
+    {
+        if ($this->id === $user->id) {
+            return false; // Can't block yourself
+        }
+
+        if ($this->hasBlocked($user)) {
+            return false; // Already blocked
+        }
+
+        return UserBlock::create([
+            'blocker_id' => $this->id,
+            'blocked_user_id' => $user->id,
+            'reason' => $reason,
+        ]) ? true : false;
+    }
+
+    /**
+     * Unblock a user
+     */
+    public function unblockUser(User $user): bool
+    {
+        return UserBlock::where('blocker_id', $this->id)
+                        ->where('blocked_user_id', $user->id)
+                        ->delete() > 0;
+    }
+
+    /**
+     * Update last login information
+     */
+    public function updateLastLogin(Request $request = null): void
+    {
+        $this->update([
+            'last_login_at' => now(),
+            'last_login_ip' => $request ? $request->ip() : null,
+            'last_login_user_agent' => $request ? $request->userAgent() : null,
+        ]);
+    }
+
+    /**
+     * Check if user account is active
+     */
+    public function isActive(): bool
+    {
+        return $this->status === 'active';
+    }
+
+    /**
+     * Check if user account is suspended
+     */
+    public function isSuspended(): bool
+    {
+        return $this->status === 'suspended';
+    }
+
+    /**
+     * Check if user account is deleted
+     */
+    public function isDeleted(): bool
+    {
+        return $this->status === 'deleted' || $this->deleted_at !== null;
+    }
+
+    /**
+     * Soft delete user account
+     */
+    public function softDeleteAccount(string $reason = null): bool
+    {
+        // Delete all tokens
+        $this->tokens()->delete();
+        
+        // Update status and reason
+        $this->update([
+            'status' => 'deleted',
+            'deletion_reason' => $reason,
+        ]);
+        
+        // Soft delete the user
+        return $this->delete();
+    }
+
+    /**
+     * Restore user account
+     */
+    public function restoreAccount(): bool
+    {
+        $this->update(['status' => 'active']);
+        return $this->restore();
     }
 }

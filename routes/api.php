@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\MessageController;
 use App\Http\Controllers\Api\RecommendationController;
 use App\Http\Controllers\Api\LikeController;
 use App\Http\Controllers\Api\DiscoverController;
+use App\Http\Controllers\Api\UserBlockController;
 
 /*
 |--------------------------------------------------------------------------
@@ -30,6 +31,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // Auth
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'user']);
+    Route::delete('/account', [AuthController::class, 'deleteAccount']);
+    Route::put('/account/remember-login', [AuthController::class, 'updateRememberLogin']);
+    Route::get('/account/login-history', [AuthController::class, 'getLoginHistory']);
     
     // User profile
     Route::get('/profile', [UserController::class, 'profile']);
@@ -59,4 +63,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/messages/send', [MessageController::class, 'sendMessage']);
     Route::get('/messages/{user}', [MessageController::class, 'getChatHistory']);
     Route::get('/messages', [MessageController::class, 'getConversations']);
+    
+    // User Blocking
+    Route::post('/blocks/{user}', [UserBlockController::class, 'blockUser']);
+    Route::delete('/blocks/{user}', [UserBlockController::class, 'unblockUser']);
+    Route::get('/blocks', [UserBlockController::class, 'getBlockedUsers']);
+    Route::get('/blocks/blocked-by', [UserBlockController::class, 'getBlockedByUsers']);
+    Route::get('/blocks/{user}/status', [UserBlockController::class, 'checkBlockStatus']);
+    Route::get('/blocks/stats', [UserBlockController::class, 'getBlockStats']);
 }); 

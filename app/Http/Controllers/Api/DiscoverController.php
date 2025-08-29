@@ -55,6 +55,13 @@ class DiscoverController extends Controller
             ], 400);
         }
 
+        // Check if user is blocked or has blocked the target user
+        if ($currentUser->hasBlocked($targetUser) || $currentUser->isBlockedBy($targetUser)) {
+            return response()->json([
+                'message' => 'Cannot interact with this user due to blocking',
+            ], 403);
+        }
+
         // Check if already liked
         if ($currentUser->hasLiked($targetUser)) {
             return response()->json([

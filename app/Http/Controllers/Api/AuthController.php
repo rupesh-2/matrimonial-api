@@ -63,6 +63,7 @@ class AuthController extends Controller
         $request->validate([
             'email' => 'required|string|email',
             'password' => 'required|string',
+            'remember_login' => 'boolean',
         ]);
 
         if (!Auth::attempt($request->only('email', 'password'))) {
@@ -72,12 +73,33 @@ class AuthController extends Controller
         }
 
         $user = User::where('email', $request->email)->firstOrFail();
-        $token = $user->createToken('auth_token')->plainTextToken;
+        
+        // Check if user account is active
+        if (!$user->isActive()) {
+            Auth::logout();
+            throw ValidationException::withMessages([
+                'email' => ['Your account is not active. Please contact support.'],
+            ]);
+        }
+
+        // Update last login information
+        $user->updateLastLogin($request);
+        
+        // Update remember login preference
+        if ($request->has('remember_login')) {
+            $user->update(['remember_login' => $request->remember_login]);
+        }
+
+        // Create token with expiration based on remember login
+        $tokenName = $request->remember_login ? 'remember_token' : 'auth_token';
+        $token = $user->createToken($tokenName, [], $request->remember_login ? now()->addYear() : now()->addDay());
 
         return response()->json([
             'message' => 'Login successful',
             'user' => $user,
-            'token' => $token,
+            'token' => $token->plainTextToken,
+            'expires_at' => $token->accessToken->expires_at,
+            'remember_login' => $user->remember_login,
         ]);
     }
 
@@ -100,6 +122,66 @@ class AuthController extends Controller
     {
         return response()->json([
             'user' => $request->user()->load('preferences'),
+        ]);
+    }
+
+    /**
+     * Delete user account
+     */
+    public function deleteAccount(Request $request)
+    {
+        $request->validate([
+            'password' => 'required|string',
+            'reason' => 'nullable|string|max:500',
+        ]);
+
+        $user = $request->user();
+
+        // Verify password
+        if (!Hash::check($request->password, $user->password)) {
+            throw ValidationException::withMessages([
+                'password' => ['The provided password is incorrect.'],
+            ]);
+        }
+
+        // Soft delete the account
+        $user->softDeleteAccount($request->reason);
+
+        return response()->json([
+            'message' => 'Account deleted successfully. You can restore it within 30 days by contacting support.',
+        ]);
+    }
+
+    /**
+     * Update remember login preference
+     */
+    public function updateRememberLogin(Request $request)
+    {
+        $request->validate([
+            'remember_login' => 'required|boolean',
+        ]);
+
+        $user = $request->user();
+        $user->update(['remember_login' => $request->remember_login]);
+
+        return response()->json([
+            'message' => 'Remember login preference updated successfully',
+            'remember_login' => $user->remember_login,
+        ]);
+    }
+
+    /**
+     * Get login history
+     */
+    public function getLoginHistory(Request $request)
+    {
+        $user = $request->user();
+
+        return response()->json([
+            'last_login_at' => $user->last_login_at,
+            'last_login_ip' => $user->last_login_ip,
+            'last_login_user_agent' => $user->last_login_user_agent,
+            'remember_login' => $user->remember_login,
         ]);
     }
 } 

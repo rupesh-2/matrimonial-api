@@ -204,7 +204,9 @@ class MatchmakingService
                     ->whereNotIn('id', $user->likes()->pluck('liked_user_id')) // Exclude already liked
                     ->whereNotIn('id', $user->likedBy()->pluck('user_id')) // Exclude those who liked current user
                     ->whereNotIn('id', $user->matches()->pluck('matched_user_id')) // Exclude existing matches
-                    ->whereNotIn('id', $user->matchedBy()->pluck('user_id')); // Exclude existing matches
+                    ->whereNotIn('id', $user->matchedBy()->pluck('user_id')) // Exclude existing matches
+                    ->whereNotIn('id', $user->blockedUsers()->pluck('users.id')) // Exclude blocked users
+                    ->whereNotIn('id', $user->blockedByUsers()->pluck('users.id')); // Exclude users who blocked current user
 
         if (!$preferences) {
             // If no preferences, return random users
