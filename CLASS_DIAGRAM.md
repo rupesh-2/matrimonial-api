@@ -227,39 +227,36 @@ classDiagram
     }
 
     %% Relationships
-    User ||--|| Preference : has
-    User ||--o{ Like : gives
-    User ||--o{ Like : receives
-    User ||--o{ Match : has
-    User ||--o{ Match : matched_with
-    User ||--o{ Message : sends
-    User ||--o{ Message : receives
-    User ||--o{ Notification : has
-    User ||--o{ PersonalAccessToken : has
+    User ||--|| Preference
+    User ||--o{ Like
+    User ||--o{ Match
+    User ||--o{ Message
+    User ||--o{ Notification
+    User ||--o{ PersonalAccessToken
 
-    Like ||--o{ Match : creates
-    Message ||--o{ Notification : triggers
+    Like ||--o{ Match
+    Message ||--o{ Notification
 
     %% Controller Dependencies
-    AuthController --> User : manages
-    UserController --> User : manages
-    UserController --> Preference : manages
-    DiscoverController --> User : discovers
-    DiscoverController --> Like : manages
-    DiscoverController --> Match : creates
-    MatchController --> Match : manages
-    MessageController --> Message : manages
-    MessageController --> User : validates
-    NotificationController --> Notification : manages
-    NotificationController --> FCMService : uses
-    RecommendationController --> MatchmakingService : uses
+    AuthController --> User
+    UserController --> User
+    UserController --> Preference
+    DiscoverController --> User
+    DiscoverController --> Like
+    DiscoverController --> Match
+    MatchController --> Match
+    MessageController --> Message
+    MessageController --> User
+    NotificationController --> Notification
+    NotificationController --> FCMService
+    RecommendationController --> MatchmakingService
 
     %% Service Dependencies
-    DiscoverController --> MatchmakingService : uses
-    DiscoverController --> NotificationService : uses
-    MessageController --> NotificationService : uses
-    NotificationService --> FCMService : uses
-    NotificationService --> Notification : manages
+    DiscoverController --> MatchmakingService
+    DiscoverController --> NotificationService
+    MessageController --> NotificationService
+    NotificationService --> FCMService
+    NotificationService --> Notification
 ```
 
 ## 📊 **Class Descriptions**
