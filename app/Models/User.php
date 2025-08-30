@@ -10,6 +10,7 @@ use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class User extends Authenticatable
 {
@@ -316,5 +317,30 @@ class User extends Authenticatable
     {
         $this->update(['status' => 'active']);
         return $this->restore();
+    }
+
+    /**
+     * Get profile picture URL
+     */
+    public function getProfilePictureUrlAttribute()
+    {
+        if (!$this->profile_picture) {
+            return null;
+        }
+
+        return Storage::disk('public')->url($this->profile_picture);
+    }
+
+    /**
+     * Get profile picture URL with fallback
+     */
+    public function getProfilePictureUrlWithFallbackAttribute()
+    {
+        if ($this->profile_picture) {
+            return Storage::disk('public')->url($this->profile_picture);
+        }
+
+        // Return a default avatar URL or initials
+        return 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&color=7C3AED&background=EBF4FF';
     }
 }

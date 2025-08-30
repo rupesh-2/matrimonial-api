@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Preference;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class UserController extends Controller
 {
@@ -36,14 +38,31 @@ class UserController extends Controller
             'location' => 'sometimes|string|max:255',
             'occupation' => 'sometimes|string|max:255',
             'bio' => 'sometimes|string|max:1000',
-            'profile_picture' => 'sometimes|string|max:255',
+            'profile_picture' => 'sometimes|image|mimes:jpeg,png,jpg,gif|max:2048', // 2MB max
         ]);
 
         $user = $request->user();
-        $user->update($request->only([
+        $updateData = $request->only([
             'name', 'age', 'gender', 'religion', 'caste', 'income',
-            'education', 'location', 'occupation', 'bio', 'profile_picture'
-        ]));
+            'education', 'location', 'occupation', 'bio'
+        ]);
+
+        // Handle profile picture upload
+        if ($request->hasFile('profile_picture')) {
+            // Delete old profile picture if exists
+            if ($user->profile_picture && Storage::disk('public')->exists($user->profile_picture)) {
+                Storage::disk('public')->delete($user->profile_picture);
+            }
+
+            // Store new profile picture
+            $file = $request->file('profile_picture');
+            $fileName = 'profile_pictures/' . time() . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
+            
+            $path = $file->storeAs('profile_pictures', $fileName, 'public');
+            $updateData['profile_picture'] = $path;
+        }
+
+        $user->update($updateData);
 
         return response()->json([
             'message' => 'Profile updated successfully',
@@ -99,6 +118,74 @@ class UserController extends Controller
         return response()->json([
             'message' => 'Preferences updated successfully',
             'preferences' => $preferences,
+        ]);
+    }
+
+    /**
+     * Upload profile picture only
+     */
+    public function uploadProfilePicture(Request $request)
+    {
+        $request->validate([
+            'profile_picture' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048', // 2MB max
+        ]);
+
+        $user = $request->user();
+
+        // Delete old profile picture if exists
+        if ($user->profile_picture && Storage::disk('public')->exists($user->profile_picture)) {
+            Storage::disk('public')->delete($user->profile_picture);
+        }
+
+        // Store new profile picture
+        $file = $request->file('profile_picture');
+        $fileName = 'profile_pictures/' . time() . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
+        
+        $path = $file->storeAs('profile_pictures', $fileName, 'public');
+        
+        $user->update(['profile_picture' => $path]);
+
+        return response()->json([
+            'message' => 'Profile picture uploaded successfully',
+            'profile_picture' => $path,
+            'profile_picture_url' => Storage::disk('public')->url($path),
+        ]);
+    }
+
+    /**
+     * Delete profile picture
+     */
+    public function deleteProfilePicture(Request $request)
+    {
+        $user = $request->user();
+
+        if ($user->profile_picture && Storage::disk('public')->exists($user->profile_picture)) {
+            Storage::disk('public')->delete($user->profile_picture);
+        }
+
+        $user->update(['profile_picture' => null]);
+
+        return response()->json([
+            'message' => 'Profile picture deleted successfully',
+        ]);
+    }
+
+    /**
+     * Get profile picture URL
+     */
+    public function getProfilePicture(Request $request)
+    {
+        $user = $request->user();
+
+        if (!$user->profile_picture) {
+            return response()->json([
+                'message' => 'No profile picture found',
+                'profile_picture_url' => null,
+            ]);
+        }
+
+        return response()->json([
+            'profile_picture_url' => Storage::disk('public')->url($user->profile_picture),
         ]);
     }
 } 

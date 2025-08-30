@@ -7,30 +7,35 @@ This document outlines the new account management features including Remember Lo
 ## 🚀 **Features Implemented**
 
 ### 1. **Remember Login System**
-- Extended token expiration for "Remember Me" functionality
-- Login history tracking with IP and user agent
-- Configurable remember login preference
+
+-   Extended token expiration for "Remember Me" functionality
+-   Login history tracking with IP and user agent
+-   Configurable remember login preference
 
 ### 2. **User Blocking System**
-- Block/unblock users with reasons
-- Prevent interactions between blocked users
-- Block statistics and management
+
+-   Block/unblock users with reasons
+-   Prevent interactions between blocked users
+-   Block statistics and management
 
 ### 3. **Account Deletion System**
-- Soft delete with recovery option
-- Password verification for deletion
-- Deletion reason tracking
+
+-   Soft delete with recovery option
+-   Password verification for deletion
+-   Deletion reason tracking
 
 ## 🔗 **API Endpoints**
 
 ### **Authentication & Account Management**
 
 #### **1. Enhanced Login with Remember Me**
+
 ```http
 POST /api/login
 ```
 
 **Request Body:**
+
 ```json
 {
     "email": "user@example.com",
@@ -40,6 +45,7 @@ POST /api/login
 ```
 
 **Response:**
+
 ```json
 {
     "message": "Login successful",
@@ -59,11 +65,13 @@ POST /api/login
 ```
 
 #### **2. Update Remember Login Preference**
+
 ```http
 PUT /api/account/remember-login
 ```
 
 **Request Body:**
+
 ```json
 {
     "remember_login": true
@@ -71,6 +79,7 @@ PUT /api/account/remember-login
 ```
 
 **Response:**
+
 ```json
 {
     "message": "Remember login preference updated successfully",
@@ -79,11 +88,13 @@ PUT /api/account/remember-login
 ```
 
 #### **3. Get Login History**
+
 ```http
 GET /api/account/login-history
 ```
 
 **Response:**
+
 ```json
 {
     "last_login_at": "2025-08-29T13:15:00.000000Z",
@@ -94,11 +105,13 @@ GET /api/account/login-history
 ```
 
 #### **4. Delete Account**
+
 ```http
 DELETE /api/account
 ```
 
 **Request Body:**
+
 ```json
 {
     "password": "password123",
@@ -107,6 +120,7 @@ DELETE /api/account
 ```
 
 **Response:**
+
 ```json
 {
     "message": "Account deleted successfully. You can restore it within 30 days by contacting support."
@@ -116,11 +130,13 @@ DELETE /api/account
 ### **User Blocking System**
 
 #### **1. Block a User**
+
 ```http
 POST /api/blocks/{user_id}
 ```
 
 **Request Body:**
+
 ```json
 {
     "reason": "Inappropriate behavior"
@@ -128,6 +144,7 @@ POST /api/blocks/{user_id}
 ```
 
 **Response:**
+
 ```json
 {
     "message": "User blocked successfully.",
@@ -141,11 +158,13 @@ POST /api/blocks/{user_id}
 ```
 
 #### **2. Unblock a User**
+
 ```http
 DELETE /api/blocks/{user_id}
 ```
 
 **Response:**
+
 ```json
 {
     "message": "User unblocked successfully.",
@@ -158,11 +177,13 @@ DELETE /api/blocks/{user_id}
 ```
 
 #### **3. Get Blocked Users List**
+
 ```http
 GET /api/blocks?page=1
 ```
 
 **Response:**
+
 ```json
 {
     "blocked_users": {
@@ -185,11 +206,13 @@ GET /api/blocks?page=1
 ```
 
 #### **4. Get Users Who Blocked You**
+
 ```http
 GET /api/blocks/blocked-by?page=1
 ```
 
 **Response:**
+
 ```json
 {
     "blocked_by_users": {
@@ -212,11 +235,13 @@ GET /api/blocks/blocked-by?page=1
 ```
 
 #### **5. Check Block Status**
+
 ```http
 GET /api/blocks/{user_id}/status
 ```
 
 **Response:**
+
 ```json
 {
     "user_id": 2,
@@ -227,11 +252,13 @@ GET /api/blocks/{user_id}/status
 ```
 
 #### **6. Get Block Statistics**
+
 ```http
 GET /api/blocks/stats
 ```
 
 **Response:**
+
 ```json
 {
     "blocked_count": 1,
@@ -242,6 +269,7 @@ GET /api/blocks/stats
 ## 🗄️ **Database Schema**
 
 ### **Users Table (Updated)**
+
 ```sql
 -- New columns added to users table
 ALTER TABLE users ADD COLUMN remember_login BOOLEAN DEFAULT FALSE;
@@ -254,6 +282,7 @@ ALTER TABLE users ADD COLUMN deletion_reason TEXT NULL;
 ```
 
 ### **User Blocks Table**
+
 ```sql
 CREATE TABLE user_blocks (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -263,7 +292,7 @@ CREATE TABLE user_blocks (
     blocked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     created_at TIMESTAMP NULL,
     updated_at TIMESTAMP NULL,
-    
+
     FOREIGN KEY (blocker_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (blocked_user_id) REFERENCES users(id) ON DELETE CASCADE,
     UNIQUE KEY unique_block (blocker_id, blocked_user_id),
@@ -275,104 +304,110 @@ CREATE TABLE user_blocks (
 ## 🔒 **Security Features**
 
 ### **Token Management**
-- **Regular Login**: Token expires in 24 hours
-- **Remember Login**: Token expires in 1 year
-- **Automatic cleanup**: Expired tokens are automatically removed
+
+-   **Regular Login**: Token expires in 24 hours
+-   **Remember Login**: Token expires in 1 year
+-   **Automatic cleanup**: Expired tokens are automatically removed
 
 ### **Account Protection**
-- **Password verification**: Required for account deletion
-- **Soft deletion**: Accounts can be recovered within 30 days
-- **Status tracking**: Active, suspended, or deleted states
+
+-   **Password verification**: Required for account deletion
+-   **Soft deletion**: Accounts can be recovered within 30 days
+-   **Status tracking**: Active, suspended, or deleted states
 
 ### **Blocking Protection**
-- **Bidirectional blocking**: Prevents all interactions
-- **Discover exclusion**: Blocked users don't appear in recommendations
-- **Like prevention**: Cannot like blocked users
-- **Message prevention**: Cannot message blocked users
+
+-   **Bidirectional blocking**: Prevents all interactions
+-   **Discover exclusion**: Blocked users don't appear in recommendations
+-   **Like prevention**: Cannot like blocked users
+-   **Message prevention**: Cannot message blocked users
 
 ## 📱 **Frontend Integration Examples**
 
 ### **React Native/Expo Example**
 
 #### **Login with Remember Me**
+
 ```javascript
 const login = async (email, password, rememberLogin) => {
-  try {
-    const response = await fetch('/api/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        email,
-        password,
-        remember_login: rememberLogin
-      })
-    });
-    
-    const data = await response.json();
-    
-    // Store token with appropriate expiration
-    await AsyncStorage.setItem('auth_token', data.token);
-    await AsyncStorage.setItem('token_expires_at', data.expires_at);
-    await AsyncStorage.setItem('remember_login', data.remember_login);
-    
-    return data;
-  } catch (error) {
-    console.error('Login error:', error);
-    throw error;
-  }
+    try {
+        const response = await fetch("/api/login", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                email,
+                password,
+                remember_login: rememberLogin,
+            }),
+        });
+
+        const data = await response.json();
+
+        // Store token with appropriate expiration
+        await AsyncStorage.setItem("auth_token", data.token);
+        await AsyncStorage.setItem("token_expires_at", data.expires_at);
+        await AsyncStorage.setItem("remember_login", data.remember_login);
+
+        return data;
+    } catch (error) {
+        console.error("Login error:", error);
+        throw error;
+    }
 };
 ```
 
 #### **Block a User**
+
 ```javascript
 const blockUser = async (userId, reason) => {
-  try {
-    const token = await AsyncStorage.getItem('auth_token');
-    const response = await fetch(`/api/blocks/${userId}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify({ reason })
-    });
-    
-    return await response.json();
-  } catch (error) {
-    console.error('Block user error:', error);
-    throw error;
-  }
+    try {
+        const token = await AsyncStorage.getItem("auth_token");
+        const response = await fetch(`/api/blocks/${userId}`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ reason }),
+        });
+
+        return await response.json();
+    } catch (error) {
+        console.error("Block user error:", error);
+        throw error;
+    }
 };
 ```
 
 #### **Delete Account**
+
 ```javascript
 const deleteAccount = async (password, reason) => {
-  try {
-    const token = await AsyncStorage.getItem('auth_token');
-    const response = await fetch('/api/account', {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify({ password, reason })
-    });
-    
-    if (response.ok) {
-      // Clear all stored data
-      await AsyncStorage.clear();
-      // Navigate to login screen
-      navigation.navigate('Login');
+    try {
+        const token = await AsyncStorage.getItem("auth_token");
+        const response = await fetch("/api/account", {
+            method: "DELETE",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ password, reason }),
+        });
+
+        if (response.ok) {
+            // Clear all stored data
+            await AsyncStorage.clear();
+            // Navigate to login screen
+            navigation.navigate("Login");
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error("Delete account error:", error);
+        throw error;
     }
-    
-    return await response.json();
-  } catch (error) {
-    console.error('Delete account error:', error);
-    throw error;
-  }
 };
 ```
 
@@ -381,6 +416,7 @@ const deleteAccount = async (password, reason) => {
 ### **cURL Commands**
 
 #### **Login with Remember Me**
+
 ```bash
 curl -X POST http://localhost:8000/api/login \
   -H "Content-Type: application/json" \
@@ -392,6 +428,7 @@ curl -X POST http://localhost:8000/api/login \
 ```
 
 #### **Block a User**
+
 ```bash
 curl -X POST http://localhost:8000/api/blocks/2 \
   -H "Content-Type: application/json" \
@@ -402,6 +439,7 @@ curl -X POST http://localhost:8000/api/blocks/2 \
 ```
 
 #### **Delete Account**
+
 ```bash
 curl -X DELETE http://localhost:8000/api/account \
   -H "Content-Type: application/json" \
@@ -415,18 +453,21 @@ curl -X DELETE http://localhost:8000/api/account \
 ## 🔄 **Business Logic**
 
 ### **Remember Login Flow**
+
 1. User logs in with `remember_login: true`
 2. Token created with 1-year expiration
 3. User preference updated in database
 4. Login history tracked (IP, user agent, timestamp)
 
 ### **Blocking Flow**
+
 1. User blocks another user with optional reason
 2. Block record created in `user_blocks` table
 3. Blocked user excluded from discover recommendations
 4. All interactions prevented between blocked users
 
 ### **Account Deletion Flow**
+
 1. User requests account deletion with password verification
 2. Account status changed to 'deleted'
 3. Deletion reason stored
@@ -438,6 +479,7 @@ curl -X DELETE http://localhost:8000/api/account \
 ### **Common Error Responses**
 
 #### **Invalid Password for Deletion**
+
 ```json
 {
     "message": "The given data was invalid.",
@@ -448,6 +490,7 @@ curl -X DELETE http://localhost:8000/api/account \
 ```
 
 #### **Already Blocked User**
+
 ```json
 {
     "message": "User is already blocked."
@@ -455,6 +498,7 @@ curl -X DELETE http://localhost:8000/api/account \
 ```
 
 #### **Cannot Block Self**
+
 ```json
 {
     "message": "The given data was invalid.",
@@ -465,6 +509,7 @@ curl -X DELETE http://localhost:8000/api/account \
 ```
 
 #### **Account Not Active**
+
 ```json
 {
     "message": "The given data was invalid.",

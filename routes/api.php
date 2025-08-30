@@ -39,6 +39,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/profile', [UserController::class, 'profile']);
     Route::put('/profile', [UserController::class, 'updateProfile']);
     Route::post('/profile/preferences', [UserController::class, 'updatePreferences']);
+    Route::post('/profile/picture', [UserController::class, 'uploadProfilePicture']);
+    Route::delete('/profile/picture', [UserController::class, 'deleteProfilePicture']);
+    Route::get('/profile/picture', [UserController::class, 'getProfilePicture']);
     
     // Matchmaking
     Route::get('/recommendations', [RecommendationController::class, 'getRecommendations']);
